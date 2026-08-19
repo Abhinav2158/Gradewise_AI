@@ -71,7 +71,7 @@ def evaluate_domain(name: str, file_path: Path, conf_engine: ConfidenceEngine, r
         print(f"  [{idx:02d}/{len(records)}] Student #{rec['id']} | Human Avg: {(h1+h2)/2:.1f} | AI Score: {rep.total_score:.1f}/{rubric.total_marks} | Conf: {rep.composite_confidence:.2f} | Routing: {rep.overall_routing}")
 
     if len(h1_scores) > 1 and (max(h1_scores) > min(h1_scores) or max(ai_scores) > min(ai_scores)):
-        qwk = compute_qwk(h1_scores, ai_scores, min_rating=0, max_rating=int(total_marks))
+        qwk = compute_qwk(h1_scores, ai_scores)
         print(f"\n-> {name} Stand-Alone QWK vs Human Rater 1: {qwk:.4f}")
     else:
         print(f"\n-> {name} Prediction Mean: {sum(ai_scores)/len(ai_scores):.2f} (Variance too low for QWK computation)")
