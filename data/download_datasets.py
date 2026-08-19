@@ -148,6 +148,117 @@ SQUAD_SAMPLE = [
     }
 ]
 
+# Curated SciEntsBank Reference Data (SemEval-2013 Task 7)
+SCIENTSBANK_DATA = {
+    "question_id": "SEMEVAL_SCIBANK_01",
+    "domain": "Physics / Electricity",
+    "question_text": "Explain why adding more light bulbs in a simple series circuit causes the bulbs to become dimmer.",
+    "reference_answer": "In a series circuit, adding more light bulbs increases the total electrical resistance of the circuit. According to Ohm's Law (I = V/R), for a constant voltage supply, increased resistance reduces the total current flowing through the circuit, which decreases the power delivered to each individual bulb, making them dimmer.",
+    "total_marks": 3,
+    "sample_records": [
+        {
+            "id": 201,
+            "student_answer": "Adding more bulbs increases the total resistance in the series circuit. Since the voltage is constant, higher resistance causes the electric current to decrease, so each bulb receives less electrical energy and glows less brightly.",
+            "human_score_1": 3,
+            "human_score_2": 3
+        },
+        {
+            "id": 202,
+            "student_answer": "The bulbs share the same electricity and the resistance goes up, so the current goes down.",
+            "human_score_1": 2,
+            "human_score_2": 2
+        },
+        {
+            "id": 203,
+            "student_answer": "Because the battery runs out of power faster when you put too many lights on it.",
+            "human_score_1": 0,
+            "human_score_2": 0
+        }
+    ]
+}
+
+# Curated CodeNet / CS Programming Data
+CODENET_DATA = {
+    "question_id": "CODENET_PY_01",
+    "domain": "Computer Science / Algorithms",
+    "question_text": "Write a Python function `find_first_duplicate(arr)` that finds the first duplicate element in a list of integers in O(N) time complexity using a set.",
+    "reference_answer": "def find_first_duplicate(arr):\n    seen = set()\n    for num in arr:\n        if num in seen:\n            return num\n        seen.add(num)\n    return None",
+    "total_marks": 4,
+    "sample_records": [
+        {
+            "id": 301,
+            "student_answer": "def find_first_duplicate(arr):\n    seen = set()\n    for x in arr:\n        if x in seen:\n            return x\n        seen.add(x)\n    return None",
+            "human_score_1": 4,
+            "human_score_2": 4
+        },
+        {
+            "id": 302,
+            "student_answer": "def find_first_duplicate(arr):\n    for i in range(len(arr)):\n        for j in range(i+1, len(arr)):\n            if arr[i] == arr[j]:\n                return arr[i]\n    return None",
+            "human_score_1": 2,
+            "human_score_2": 2
+        },
+        {
+            "id": 303,
+            "student_answer": "print('duplicate')",
+            "human_score_1": 0,
+            "human_score_2": 0
+        }
+    ]
+}
+
+# Curated ASAP-AES Long-form Essay Data (Set 1: Computers in Society)
+ASAP_AES_DATA = {
+    "question_id": "ASAP_AES_SET_1",
+    "domain": "English / Persuasive Essay",
+    "question_text": "More and more people use computers, but not everyone agrees that this benefits society. Write a persuasive essay discussing the positive and negative effects of computers on individuals and communities.",
+    "reference_answer": "A strong persuasive essay must establish a clear thesis on computer technology's societal impact, provide structured paragraphs analyzing both benefits (e.g. global communication, information access) and drawbacks (e.g. digital divide, reduced physical activity), and conclude with synthesized insights.",
+    "total_marks": 6,
+    "sample_records": [
+        {
+            "id": 401,
+            "student_answer": "Computers have fundamentally reshaped modern civilization. On one hand, they provide unprecedented access to education and foster global communication. On the other hand, over-reliance on digital screens has contributed to sedentary lifestyles and reduced face-to-face interaction. In conclusion, computers are powerful tools whose societal value depends on mindful usage.",
+            "human_score_1": 5,
+            "human_score_2": 5
+        },
+        {
+            "id": 402,
+            "student_answer": "Computers are good because I play video games and chat with friends on the internet.",
+            "human_score_1": 2,
+            "human_score_2": 2
+        }
+    ]
+}
+
+def create_dataset_files():
+    print("Writing multi-domain benchmark datasets...")
+
+    # 1. ASAP-SAS Sets
+    for set_id, data in ASAP_PROMPTS.items():
+        p_file = ASAP_DIR / f"prompt_set_{set_id}.json"
+        with open(p_file, "w", encoding="utf-8") as f:
+            json.dump(data, f, indent=2)
+        print(f"  -> Created ASAP-SAS Set {set_id}: {p_file}")
+
+    # 2. SciEntsBank
+    scibank_file = DATA_DIR / "scientsbank.json"
+    with open(scibank_file, "w", encoding="utf-8") as f:
+        json.dump(SCIENTSBANK_DATA, f, indent=2)
+    print(f"  -> Created SciEntsBank Benchmark: {scibank_file}")
+
+    # 3. CodeNet
+    codenet_file = DATA_DIR / "codenet.json"
+    with open(codenet_file, "w", encoding="utf-8") as f:
+        json.dump(CODENET_DATA, f, indent=2)
+    print(f"  -> Created CodeNet Programming Benchmark: {codenet_file}")
+
+    # 4. ASAP-AES
+    aes_file = DATA_DIR / "asap_aes.json"
+    with open(aes_file, "w", encoding="utf-8") as f:
+        json.dump(ASAP_AES_DATA, f, indent=2)
+    print(f"  -> Created ASAP-AES Essay Benchmark: {aes_file}")
+
+    print("\nAll multi-domain benchmark datasets successfully generated!")
+
 def prepare_asap_dataset():
     """Generates ASAP-SAS JSON datasets for Set 1 and Set 2."""
     for set_key, data in ASAP_PROMPTS.items():
@@ -164,6 +275,7 @@ def prepare_squad_dataset():
     print(f" Saved SQuAD 2.0 Sample -> {file_path}")
 
 if __name__ == "__main__":
+    create_dataset_files()
     print("Preparing and validating benchmark datasets...")
     prepare_asap_dataset()
     prepare_squad_dataset()

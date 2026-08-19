@@ -1,0 +1,27 @@
+{
+  "question_id": "SEMEVAL_SCIBANK_01",
+  "domain": "Physics / Electricity",
+  "question_text": "Explain why adding more light bulbs in a simple series circuit causes the bulbs to become dimmer.",
+  "reference_answer": "In a series circuit, adding more light bulbs increases the total electrical resistance of the circuit. According to Ohm's Law (I = V/R), for a constant voltage supply, increased resistance reduces the total current flowing through the circuit, which decreases the power delivered to each individual bulb, making them dimmer.",
+  "total_marks": 3,
+  "sample_records": [
+    {
+      "id": 201,
+      "student_answer": "Adding more bulbs increases the total resistance in the series circuit. Since the voltage is constant, higher resistance causes the electric current to decrease, so each bulb receives less electrical energy and glows less brightly.",
+      "human_score_1": 3,
+      "human_score_2": 3
+    },
+    {
+      "id": 202,
+      "student_answer": "The bulbs share the same electricity and the resistance goes up, so the current goes down.",
+      "human_score_1": 2,
+      "human_score_2": 2
+    },
+    {
+      "id": 203,
+      "student_answer": "Because the battery runs out of power faster when you put too many lights on it.",
+      "human_score_1": 0,
+      "human_score_2": 0
+    }
+  ]
+}

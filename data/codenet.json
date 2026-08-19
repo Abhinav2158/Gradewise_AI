@@ -1,0 +1,27 @@
+{
+  "question_id": "CODENET_PY_01",
+  "domain": "Computer Science / Algorithms",
+  "question_text": "Write a Python function `find_first_duplicate(arr)` that finds the first duplicate element in a list of integers in O(N) time complexity using a set.",
+  "reference_answer": "def find_first_duplicate(arr):\n    seen = set()\n    for num in arr:\n        if num in seen:\n            return num\n        seen.add(num)\n    return None",
+  "total_marks": 4,
+  "sample_records": [
+    {
+      "id": 301,
+      "student_answer": "def find_first_duplicate(arr):\n    seen = set()\n    for x in arr:\n        if x in seen:\n            return x\n        seen.add(x)\n    return None",
+      "human_score_1": 4,
+      "human_score_2": 4
+    },
+    {
+      "id": 302,
+      "student_answer": "def find_first_duplicate(arr):\n    for i in range(len(arr)):\n        for j in range(i+1, len(arr)):\n            if arr[i] == arr[j]:\n                return arr[i]\n    return None",
+      "human_score_1": 2,
+      "human_score_2": 2
+    },
+    {
+      "id": 303,
+      "student_answer": "print('duplicate')",
+      "human_score_1": 0,
+      "human_score_2": 0
+    }
+  ]
+}

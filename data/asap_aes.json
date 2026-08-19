@@ -1,0 +1,21 @@
+{
+  "question_id": "ASAP_AES_SET_1",
+  "domain": "English / Persuasive Essay",
+  "question_text": "More and more people use computers, but not everyone agrees that this benefits society. Write a persuasive essay discussing the positive and negative effects of computers on individuals and communities.",
+  "reference_answer": "A strong persuasive essay must establish a clear thesis on computer technology's societal impact, provide structured paragraphs analyzing both benefits (e.g. global communication, information access) and drawbacks (e.g. digital divide, reduced physical activity), and conclude with synthesized insights.",
+  "total_marks": 6,
+  "sample_records": [
+    {
+      "id": 401,
+      "student_answer": "Computers have fundamentally reshaped modern civilization. On one hand, they provide unprecedented access to education and foster global communication. On the other hand, over-reliance on digital screens has contributed to sedentary lifestyles and reduced face-to-face interaction. In conclusion, computers are powerful tools whose societal value depends on mindful usage.",
+      "human_score_1": 5,
+      "human_score_2": 5
+    },
+    {
+      "id": 402,
+      "student_answer": "Computers are good because I play video games and chat with friends on the internet.",
+      "human_score_1": 2,
+      "human_score_2": 2
+    }
+  ]
+}
