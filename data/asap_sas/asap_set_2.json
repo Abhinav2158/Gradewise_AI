@@ -1,0 +1,39 @@
+{
+  "essay_set": 2,
+  "question_id": "ASAP_SET_2",
+  "question_text": "Explain two ways in which polar bears are physically adapted to survive in Arctic freezing conditions.",
+  "reference_answer": "Polar bears have a thick layer of blubber (fat) beneath their skin that insulates their body and prevents heat loss. Additionally, they possess dense, water-repellent fur with hollow hairs that traps air and provides extra thermal insulation while swimming in freezing waters.",
+  "total_marks": 2,
+  "sample_records": [
+    {
+      "id": 201,
+      "student_answer": "Polar bears have a thick layer of fat called blubber to keep warm and hollow fur that traps heat.",
+      "human_score_1": 2,
+      "human_score_2": 2
+    },
+    {
+      "id": 202,
+      "student_answer": "They have thick blubber fat under their skin that stops heat from escaping.",
+      "human_score_1": 1,
+      "human_score_2": 1
+    },
+    {
+      "id": 203,
+      "student_answer": "Polar bears eat seals and have white fur so they can hide in the snow from predators.",
+      "human_score_1": 0,
+      "human_score_2": 0
+    },
+    {
+      "id": 204,
+      "student_answer": "One adaptation is their dense fur that insulates them against freezing water. Another is their black skin and blubber layer that retains body heat.",
+      "human_score_1": 2,
+      "human_score_2": 2
+    },
+    {
+      "id": 205,
+      "student_answer": "They hibernate in winter caves to survive.",
+      "human_score_1": 0,
+      "human_score_2": 0
+    }
+  ]
+}

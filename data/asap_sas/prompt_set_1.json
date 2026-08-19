@@ -1,0 +1,69 @@
+{
+  "essay_set": 1,
+  "question_id": "ASAP_SET_1",
+  "question_text": "After reading the experiment on vinegar and baking soda in a sealed vs unsealed plastic bag, describe what conclusion can be made about the mass change during a chemical reaction.",
+  "reference_answer": "In a closed system (sealed bag), the total mass of the reactants equals the total mass of the products because no gas can escape, demonstrating the Law of Conservation of Mass. In an open system (unsealed bag), the mass appears to decrease because the carbon dioxide gas produced during the reaction escapes into the surrounding air.",
+  "total_marks": 3,
+  "sample_records": [
+    {
+      "id": 101,
+      "student_answer": "The mass does not change in the sealed bag because the gas cannot escape. But in the open bag the mass went down because carbon dioxide gas was released into the air.",
+      "human_score_1": 3,
+      "human_score_2": 3
+    },
+    {
+      "id": 102,
+      "student_answer": "The mass stays the same in the closed bag because the reaction happened inside. The open bag lost weight.",
+      "human_score_1": 2,
+      "human_score_2": 2
+    },
+    {
+      "id": 103,
+      "student_answer": "The vinegar and baking soda created bubbles. In the open bag it lost mass because the gas floated away.",
+      "human_score_1": 1,
+      "human_score_2": 2
+    },
+    {
+      "id": 104,
+      "student_answer": "The chemicals mixed together and made a new liquid and the bag blew up.",
+      "human_score_1": 0,
+      "human_score_2": 0
+    },
+    {
+      "id": 105,
+      "student_answer": "According to the Law of Conservation of Mass, matter cannot be created or destroyed. In the sealed container, mass remained constant at 150g because all gas was trapped. In the unsealed bag, mass dropped from 150g to 142g because CO2 escaped.",
+      "human_score_1": 3,
+      "human_score_2": 3
+    },
+    {
+      "id": 106,
+      "student_answer": "The mass went down because the vinegar evaporated when it was opened.",
+      "human_score_1": 0,
+      "human_score_2": 1
+    },
+    {
+      "id": 107,
+      "student_answer": "The sealed bag preserved the mass since no substance left the system. The open bag lost gas so the total mass decreased.",
+      "human_score_1": 3,
+      "human_score_2": 2
+    },
+    {
+      "id": 108,
+      "student_answer": "Gas was produced in both experiments. In the closed bag, the gas stayed inside keeping the mass identical before and after.",
+      "human_score_1": 2,
+      "human_score_2": 2
+    },
+    {
+      "id": 109,
+      "student_answer": "You can conclude that chemical reactions produce new substances and changes in temperature.",
+      "human_score_1": 0,
+      "human_score_2": 0
+    },
+    {
+      "id": 110,
+      "student_answer": "The mass stayed 100% the same in the sealed container because of conservation of mass, but carbon dioxide gas escaped in the other container causing a drop in weight.",
+      "human_score_1": 3,
+      "human_score_2": 3
+    }
+  ]
+}

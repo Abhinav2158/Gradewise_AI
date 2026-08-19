@@ -9,11 +9,9 @@ __pycache__/
 *.so
 .pytest_cache/
 
-# Data & Databases
+# Data & Databases (ignore SQLite DB and vector store, track JSON benchmarks)
 data/*.db
 data/chroma_db/
-data/asap_sas/
-data/squad/
 benchmarks/results/
 
 # IDE & OS

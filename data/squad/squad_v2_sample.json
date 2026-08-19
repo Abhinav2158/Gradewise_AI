@@ -1,0 +1,33 @@
+[
+  {
+    "id": "squad_001",
+    "context": "The normans were the people who in the 10th and 11th centuries gave their name to Normandy, a region in France. They were descended from Norse Vikings.",
+    "question": "Where did the Normans give their name to?",
+    "answers": [
+      {
+        "text": "Normandy, a region in France",
+        "answer_start": 67
+      }
+    ],
+    "is_impossible": false
+  },
+  {
+    "id": "squad_002",
+    "context": "Photosynthesis is the process used by plants and other organisms to convert light energy into chemical energy that, through cellular respiration, can later be released to fuel the organism's activities.",
+    "question": "What converts light energy into chemical energy?",
+    "answers": [
+      {
+        "text": "Photosynthesis",
+        "answer_start": 0
+      }
+    ],
+    "is_impossible": false
+  },
+  {
+    "id": "squad_003",
+    "context": "Mitochondria generate most of the chemical energy needed to power the cell's biochemical reactions.",
+    "question": "What is the function of chloroplasts in human cells?",
+    "answers": [],
+    "is_impossible": true
+  }
+]
