@@ -58,7 +58,7 @@ def evaluate_domain(name: str, file_path: Path, conf_engine: ConfidenceEngine, r
         h2 = int(rec["human_score_2"])
 
         rep = conf_engine.grade_full_answer(
-            student_id=f"{name}_{rec['id']}",
+            student_id=int(rec['id']),
             rubric=rubric,
             student_answer=s_ans
         )
