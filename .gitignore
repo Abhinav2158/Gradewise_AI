@@ -9,9 +9,10 @@ __pycache__/
 *.so
 .pytest_cache/
 
-# Data & Databases (ignore SQLite DB and vector store, track JSON benchmarks)
+# Data & Databases (ignore SQLite DB, vector store, and large raw corpora; track JSON benchmarks)
 data/*.db
 data/chroma_db/
+data/raw/
 benchmarks/results/
 
 # IDE & OS
