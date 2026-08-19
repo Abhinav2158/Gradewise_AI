@@ -1,0 +1,23 @@
+# Environment Variables
+.env
+.env.local
+
+# Python Cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+
+# Data & Databases
+data/*.db
+data/chroma_db/
+data/asap_sas/
+data/squad/
+benchmarks/results/
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
