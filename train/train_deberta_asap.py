@@ -153,7 +153,10 @@ def main():
     )
 
     print(f"Initializing tokenizer and model ({args.model_name})...")
-    tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    try:
+        tokenizer = AutoTokenizer.from_pretrained(args.model_name)
+    except Exception:
+        tokenizer = AutoTokenizer.from_pretrained(args.model_name, use_fast=False)
     model = AutoModelForSequenceClassification.from_pretrained(
         args.model_name,
         num_labels=1,
