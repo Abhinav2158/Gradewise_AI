@@ -104,7 +104,8 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
             targets = batch["score"].to(device)
 
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = outputs.logits.squeeze(-1)
+            logits = torch.nan_to_num(outputs.logits.squeeze(-1), nan=0.5, posinf=1.0, neginf=0.0)
+            logits = torch.clamp(logits, 0.0, 1.0)
 
             loss = criterion(logits, targets)
             loss.backward()
@@ -112,7 +113,7 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
             optimizer.step()
             scheduler.step()
 
-            total_loss += loss.item()
+            total_loss += loss.item() if not torch.isnan(loss) else 0.0
             pbar.set_postfix({"mse_loss": f"{loss.item():.4f}"})
 
         avg_loss = total_loss / len(train_loader)
