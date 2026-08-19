@@ -35,7 +35,7 @@ from src.utils.metrics import compute_qwk
 
 class GradingDataset(Dataset):
     """PyTorch Dataset for Student Grading Tasks."""
-    def __init__(self, texts, scores, tokenizer, max_length=256):
+    def __init__(self, texts, scores, tokenizer, max_length=128):
         self.texts = texts
         self.scores = scores
         self.tokenizer = tokenizer
@@ -231,6 +231,31 @@ def run_full_training():
             device=device
         )
         results["SciEntsBank Science"] = best_qwk
+
+    # 3. ASAP-AES Long-form Essay Scoring Corpus
+    aes_file = PROJECT_ROOT / "data/raw/asap_aes/training_set_rel3.tsv"
+    if aes_file.exists():
+        aes_df = pd.read_csv(aes_file, sep="\t", encoding="latin1")
+        sub = aes_df[aes_df["essay_set"] == 1].copy()
+        max_s = float(sub["domain1_score"].max())
+        sub["norm_score"] = sub["domain1_score"] / max_s
+
+        model = AutoModelForSequenceClassification.from_pretrained(
+            args.model_name, num_labels=1, problem_type="regression"
+        ).to(device)
+
+        best_qwk = train_and_eval_set(
+            model=model,
+            tokenizer=tokenizer,
+            texts=sub["essay"].fillna("").tolist(),
+            scores=sub["norm_score"].tolist(),
+            raw_scores=sub["domain1_score"].tolist(),
+            max_score=max_s,
+            set_name="ASAP-AES Persuasive Essay",
+            args=args,
+            device=device
+        )
+        results["ASAP-AES Essay"] = best_qwk
 
     # Print Final Summary Matrix
     print("\n" + "="*65)
