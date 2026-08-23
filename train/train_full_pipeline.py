@@ -57,12 +57,12 @@ class GradingDataset(Dataset):
         return {
             "input_ids": encoding["input_ids"].squeeze(0),
             "attention_mask": encoding["attention_mask"].squeeze(0),
-            "score": torch.tensor(score, dtype=torch.float)
+            "score": torch.tensor(score, dtype=torch.float32)
         }
 
 def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, set_name, args, device):
     """Trains and evaluates DeBERTa on a specific dataset or prompt set."""
-    model = model.to(device).float()
+    model = model.to(device)
     print(f"\n" + "="*65)
     print(f" TRAINING DOMAIN: {set_name.upper()} ({len(texts):,} Samples | Max Score: {max_score})")
     print("="*65)
@@ -87,6 +87,8 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
     total_steps = len(train_loader) * args.epochs
     scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=int(0.1 * total_steps), num_training_steps=total_steps)
     criterion = nn.MSELoss()
+    use_cuda = device.type == "cuda"
+    scaler = torch.amp.GradScaler('cuda', enabled=use_cuda)
 
     best_qwk = -1.0
     out_dir = PROJECT_ROOT / args.output_dir / set_name.lower().replace(" ", "_")
@@ -104,18 +106,29 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
             attention_mask = batch["attention_mask"].to(device)
             targets = batch["score"].to(device).float()
 
-            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = torch.nan_to_num(outputs.logits.squeeze(-1).float(), nan=0.5, posinf=1.0, neginf=0.0)
-            logits = torch.clamp(logits, 0.0, 1.0)
+            with torch.amp.autocast('cuda', enabled=use_cuda):
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+                logits = outputs.logits.squeeze(-1).float()
+                logits = torch.nan_to_num(logits, nan=0.5, posinf=1.0, neginf=0.0)
+                logits = torch.clamp(logits, 0.0, 1.0)
+                loss = criterion(logits, targets)
 
-            loss = criterion(logits, targets)
-            loss.backward()
-            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-            optimizer.step()
+            if use_cuda:
+                scaler.scale(loss).backward()
+                scaler.unscale_(optimizer)
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                scaler.step(optimizer)
+                scaler.update()
+            else:
+                loss.backward()
+                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+                optimizer.step()
+
             scheduler.step()
 
-            total_loss += loss.item() if not torch.isnan(loss) else 0.0
-            pbar.set_postfix({"mse_loss": f"{loss.item():.4f}"})
+            loss_val = loss.item() if not torch.isnan(loss) else 0.0
+            total_loss += loss_val
+            pbar.set_postfix({"mse_loss": f"{loss_val:.4f}"})
 
         avg_loss = total_loss / len(train_loader)
 
@@ -128,8 +141,9 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
                 attention_mask = batch["attention_mask"].to(device)
                 targets = batch["score"].to(device).float()
 
-                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-                logits = outputs.logits.squeeze(-1).cpu().numpy()
+                with torch.amp.autocast('cuda', enabled=use_cuda):
+                    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+                    logits = outputs.logits.squeeze(-1).float().cpu().numpy()
 
                 unnorm_preds = np.clip(np.round(logits * max_score), 0, max_score)
                 unnorm_trues = np.round(targets.cpu().numpy() * max_score)
@@ -188,7 +202,7 @@ def run_full_training():
             # Fresh head for each prompt set
             model = AutoModelForSequenceClassification.from_pretrained(
                 args.model_name, num_labels=1, problem_type="regression"
-            ).to(device).float()
+            ).to(device)
             
             best_qwk = train_and_eval_set(
                 model=model,
@@ -213,12 +227,11 @@ def run_full_training():
         train_split = sb["train"]
         
         texts = [f"Question: {r['question']}\nStudent: {r['student_answer']}" for r in train_split]
-        # Binary / 3-way label conversion
         scores = [1.0 if r.get("label", "") in ["correct", "1", 1] else 0.0 for r in train_split]
         
         model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name, num_labels=1, problem_type="regression"
-        ).to(device).float()
+        ).to(device)
         
         best_qwk = train_and_eval_set(
             model=model,
@@ -243,7 +256,7 @@ def run_full_training():
 
         model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name, num_labels=1, problem_type="regression"
-        ).to(device).float()
+        ).to(device)
 
         best_qwk = train_and_eval_set(
             model=model,
