@@ -62,6 +62,7 @@ class GradingDataset(Dataset):
 
 def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, set_name, args, device):
     """Trains and evaluates DeBERTa on a specific dataset or prompt set."""
+    model = model.to(device).float()
     print(f"\n" + "="*65)
     print(f" TRAINING DOMAIN: {set_name.upper()} ({len(texts):,} Samples | Max Score: {max_score})")
     print("="*65)
@@ -101,10 +102,10 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
             optimizer.zero_grad()
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
-            targets = batch["score"].to(device)
+            targets = batch["score"].to(device).float()
 
             outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-            logits = torch.nan_to_num(outputs.logits.squeeze(-1), nan=0.5, posinf=1.0, neginf=0.0)
+            logits = torch.nan_to_num(outputs.logits.squeeze(-1).float(), nan=0.5, posinf=1.0, neginf=0.0)
             logits = torch.clamp(logits, 0.0, 1.0)
 
             loss = criterion(logits, targets)
@@ -125,7 +126,7 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
             for batch in val_loader:
                 input_ids = batch["input_ids"].to(device)
                 attention_mask = batch["attention_mask"].to(device)
-                targets = batch["score"].to(device)
+                targets = batch["score"].to(device).float()
 
                 outputs = model(input_ids=input_ids, attention_mask=attention_mask)
                 logits = outputs.logits.squeeze(-1).cpu().numpy()
@@ -187,7 +188,7 @@ def run_full_training():
             # Fresh head for each prompt set
             model = AutoModelForSequenceClassification.from_pretrained(
                 args.model_name, num_labels=1, problem_type="regression"
-            ).to(device)
+            ).to(device).float()
             
             best_qwk = train_and_eval_set(
                 model=model,
@@ -217,7 +218,7 @@ def run_full_training():
         
         model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name, num_labels=1, problem_type="regression"
-        ).to(device)
+        ).to(device).float()
         
         best_qwk = train_and_eval_set(
             model=model,
@@ -242,7 +243,7 @@ def run_full_training():
 
         model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name, num_labels=1, problem_type="regression"
-        ).to(device)
+        ).to(device).float()
 
         best_qwk = train_and_eval_set(
             model=model,
