@@ -1,0 +1,113 @@
+{
+  "manifest_version": "1.0",
+  "timestamp_utc": "2026-08-23T18:38:53.834245",
+  "git_commit": "ae567b6eb119fa022a9f10357ef4e9bf0b193dc9",
+  "dataset": "ASAP-SAS",
+  "prompt_set_id": "1",
+  "sample_size_N": 10,
+  "llm_telemetry": {
+    "total_calls": 10,
+    "live_api_calls": 0,
+    "fallback_calls": 10,
+    "live_api_ratio": 0.0,
+    "avg_latency_ms": 0
+  },
+  "human_ceiling": {
+    "qwk": 0.8921,
+    "ci_95": [
+      0.6375,
+      0.9736
+    ]
+  },
+  "ablations": {
+    "zero_shot_baseline": {
+      "qwk": 0.0,
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "predictions": [
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1,
+        1
+      ]
+    },
+    "rubric_decomposition_only": {
+      "qwk": 0.0,
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "predictions": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
+    },
+    "full_consensus_ensemble": {
+      "qwk": 0.0,
+      "ci_95": [
+        0.0,
+        0.0
+      ],
+      "predictions": [
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3,
+        3
+      ]
+    }
+  },
+  "ground_truth": {
+    "human_1": [
+      3,
+      2,
+      1,
+      0,
+      3,
+      0,
+      3,
+      2,
+      0,
+      3
+    ],
+    "human_2": [
+      3,
+      2,
+      2,
+      0,
+      3,
+      1,
+      2,
+      2,
+      0,
+      3
+    ]
+  },
+  "fitted_logistic_weights": {
+    "w1_overlap": 0.2567,
+    "w2_score_variance": 0.0159,
+    "w3_ocr_quality": 0.0159,
+    "w4_lexical_grounding": 0.7114
+  }
+}

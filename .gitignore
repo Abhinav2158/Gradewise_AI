@@ -13,7 +13,10 @@ __pycache__/
 data/*.db
 data/chroma_db/
 data/raw/
-benchmarks/results/
+models/checkpoints/
+models/*.safetensors
+models/*.bin
+models/*.pkl
 
 # IDE & OS
 .vscode/
