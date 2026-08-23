@@ -62,7 +62,7 @@ class GradingDataset(Dataset):
 
 def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, set_name, args, device):
     """Trains and evaluates DeBERTa on a specific dataset or prompt set."""
-    model = model.to(device)
+    model = model.to(device).float()
     print(f"\n" + "="*65)
     print(f" TRAINING DOMAIN: {set_name.upper()} ({len(texts):,} Samples | Max Score: {max_score})")
     print("="*65)
@@ -87,8 +87,6 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
     total_steps = len(train_loader) * args.epochs
     scheduler = get_cosine_schedule_with_warmup(optimizer, num_warmup_steps=int(0.1 * total_steps), num_training_steps=total_steps)
     criterion = nn.MSELoss()
-    use_cuda = device.type == "cuda"
-    scaler = torch.amp.GradScaler('cuda', enabled=use_cuda)
 
     best_qwk = -1.0
     out_dir = PROJECT_ROOT / args.output_dir / set_name.lower().replace(" ", "_")
@@ -104,26 +102,17 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
             optimizer.zero_grad()
             input_ids = batch["input_ids"].to(device)
             attention_mask = batch["attention_mask"].to(device)
-            targets = batch["score"].to(device).float()
+            targets = batch["score"].to(device, dtype=torch.float32)
 
-            with torch.amp.autocast('cuda', enabled=use_cuda):
-                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-                logits = outputs.logits.squeeze(-1).float()
-                logits = torch.nan_to_num(logits, nan=0.5, posinf=1.0, neginf=0.0)
-                logits = torch.clamp(logits, 0.0, 1.0)
-                loss = criterion(logits, targets)
-
-            if use_cuda:
-                scaler.scale(loss).backward()
-                scaler.unscale_(optimizer)
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                scaler.step(optimizer)
-                scaler.update()
-            else:
-                loss.backward()
-                torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
-                optimizer.step()
-
+            outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+            logits = outputs.logits.squeeze(-1).float()
+            logits = torch.nan_to_num(logits, nan=0.5, posinf=1.0, neginf=0.0)
+            logits = torch.clamp(logits, 0.0, 1.0)
+            
+            loss = criterion(logits, targets)
+            loss.backward()
+            torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
             scheduler.step()
 
             loss_val = loss.item() if not torch.isnan(loss) else 0.0
@@ -139,11 +128,10 @@ def train_and_eval_set(model, tokenizer, texts, scores, raw_scores, max_score, s
             for batch in val_loader:
                 input_ids = batch["input_ids"].to(device)
                 attention_mask = batch["attention_mask"].to(device)
-                targets = batch["score"].to(device).float()
+                targets = batch["score"].to(device, dtype=torch.float32)
 
-                with torch.amp.autocast('cuda', enabled=use_cuda):
-                    outputs = model(input_ids=input_ids, attention_mask=attention_mask)
-                    logits = outputs.logits.squeeze(-1).float().cpu().numpy()
+                outputs = model(input_ids=input_ids, attention_mask=attention_mask)
+                logits = outputs.logits.squeeze(-1).float().cpu().numpy()
 
                 unnorm_preds = np.clip(np.round(logits * max_score), 0, max_score)
                 unnorm_trues = np.round(targets.cpu().numpy() * max_score)
@@ -202,7 +190,7 @@ def run_full_training():
             # Fresh head for each prompt set
             model = AutoModelForSequenceClassification.from_pretrained(
                 args.model_name, num_labels=1, problem_type="regression"
-            ).to(device)
+            ).to(device).float()
             
             best_qwk = train_and_eval_set(
                 model=model,
@@ -231,7 +219,7 @@ def run_full_training():
         
         model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name, num_labels=1, problem_type="regression"
-        ).to(device)
+        ).to(device).float()
         
         best_qwk = train_and_eval_set(
             model=model,
@@ -256,7 +244,7 @@ def run_full_training():
 
         model = AutoModelForSequenceClassification.from_pretrained(
             args.model_name, num_labels=1, problem_type="regression"
-        ).to(device)
+        ).to(device).float()
 
         best_qwk = train_and_eval_set(
             model=model,
