@@ -864,6 +864,51 @@ elif nav_choice == "⚡ Live Interactive Grading Console":
                 )
                 st.session_state['last_graded'] = report
 
+                # Automatically persist to Database so it immediately connects to HITL Review Queue
+                try:
+                    r_ver = db.query(RubricVersion).filter(RubricVersion.question_id == dataset["question_id"]).first()
+                    if not r_ver:
+                        r_ver = RubricVersion(
+                            question_id=dataset["question_id"],
+                            version=1,
+                            schema_json=rubric.model_dump_json(),
+                            is_active=True
+                        )
+                        db.add(r_ver)
+                        db.commit()
+                        db.refresh(r_ver)
+
+                    sub = StudentSubmission(
+                        question_id=dataset["question_id"],
+                        student_id=student_id,
+                        answer_text=student_answer,
+                        human_score_1=report.total_score,
+                        human_score_2=report.total_score
+                    )
+                    db.add(sub)
+                    db.commit()
+                    db.refresh(sub)
+
+                    for c_res in report.criterion_results:
+                        spans_json = json.dumps([s.model_dump() for s in c_res.segmentation.combined_evidence_spans])
+                        g = GradingRecord(
+                            submission_id=sub.id,
+                            rubric_version_id=r_ver.id,
+                            criterion_id=c_res.criterion.id,
+                            evidence_spans_json=spans_json,
+                            tentative_score=c_res.score_result.points_awarded,
+                            max_points=c_res.criterion.points,
+                            final_score=c_res.score_result.points_awarded,
+                            confidence_score=c_res.confidence_score,
+                            routing_decision=c_res.routing,
+                            justification=c_res.score_result.justification,
+                            is_audited=False
+                        )
+                        db.add(g)
+                    db.commit()
+                except Exception as db_err:
+                    print(f"Tab 2 DB sync notice: {db_err}")
+
             if report.overall_routing == "auto_accept":
                 badge_html = '<span class="badge-auto">✅ AUTO-ACCEPTED</span>'
             elif report.overall_routing == "flag_for_spot_check":
