@@ -374,10 +374,10 @@ if nav_choice == "📄 Full Exam & Batch PDF Grading":
         if parsed_exam.questions:
             st.markdown(f"**📌 Detected `{len(parsed_exam.questions)}` Question(s) — Total Exam Marks: `{parsed_exam.total_exam_marks}` pts**")
             with st.expander("📝 Review & Adjust Marks Allocation per Question", expanded=True):
-                for q in parsed_exam.questions:
+                for idx, q in enumerate(parsed_exam.questions):
                     c_q1, c_q2 = st.columns([3, 1])
                     c_q1.write(f"**{q.title}:** {q.text[:70]}...")
-                    q.max_marks = c_q2.number_input(f"{q.id} Marks", min_value=1.0, max_value=50.0, value=float(q.max_marks), step=1.0, key=f"m_{q.id}")
+                    q.max_marks = c_q2.number_input(f"{q.id} Marks", min_value=1.0, max_value=50.0, value=float(q.max_marks), step=1.0, key=f"m_{q.id}_{idx}")
 
         st.markdown('</div>', unsafe_allow_html=True)
 
@@ -416,15 +416,15 @@ if nav_choice == "📄 Full Exam & Batch PDF Grading":
                 st.success(f" Extracted solutions from `{sol_file.name}` mapped across {len(parsed_exam.questions)} question(s)!")
                 
                 with st.expander("👁️ Review & Edit Extracted Question Solutions", expanded=True):
-                    for q in parsed_exam.questions:
+                    for idx, q in enumerate(parsed_exam.questions):
                         default_sol = mapped_solutions.get(q.id, parsed_sol_doc.text)
-                        q.reference_answer = st.text_area(f"Extracted Solution for {q.title}:", value=default_sol, height=80, key=f"sol_pdf_{q.id}")
+                        q.reference_answer = st.text_area(f"Extracted Solution for {q.title}:", value=default_sol, height=80, key=f"sol_pdf_{q.id}_{idx}")
             else:
                 st.info("Upload your teacher's marking scheme or full answer key PDF above.")
 
         else:
-            for q in parsed_exam.questions:
-                q.reference_answer = st.text_area(f"Reference Solution for {q.title}:", value=q.reference_answer or "", placeholder="Type reference answer here...", height=70, key=f"ref_{q.id}")
+            for idx, q in enumerate(parsed_exam.questions):
+                q.reference_answer = st.text_area(f"Reference Solution for {q.title}:", value=q.reference_answer or "", placeholder="Type reference answer here...", height=70, key=f"ref_{q.id}_{idx}")
         
         st.markdown('</div>', unsafe_allow_html=True)
 

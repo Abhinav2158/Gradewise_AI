@@ -96,7 +96,7 @@ def extract_questions_from_text(paper_text: str) -> ExamQuestionPaper:
 
             questions.append(ExamQuestion(
                 number=q_num,
-                id=f"Q_{q_num}",
+                id=f"Q_{q_num}_{idx}",
                 title=f"Question {q_num}",
                 text=clean_text,
                 max_marks=q_marks,

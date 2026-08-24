@@ -7,6 +7,8 @@ python-dotenv>=1.0.1
 # NLP, Embeddings & Transformers
 torch
 transformers>=4.40.0
+sentencepiece>=0.2.0
+datasets>=2.18.0
 sentence-transformers>=3.0.0
 scikit-learn>=1.4.0
 numpy>=1.24.0
@@ -15,6 +17,12 @@ pandas>=2.1.0
 # Database & Storage
 sqlalchemy>=2.0.0
 chromadb>=0.5.0
+
+# Document Ingestion & OCR
+pymupdf>=1.24.0
+pypdf>=4.0.0
+Pillow>=10.0.0
+easyocr>=1.7.0
 
 # UI & Utilities
 streamlit>=1.35.0
