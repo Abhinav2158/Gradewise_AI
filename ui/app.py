@@ -571,7 +571,7 @@ if nav_choice == "📄 Full Exam & Batch PDF Grading":
                                     confidence_score=c_res.confidence_score,
                                     routing_decision=c_res.routing,
                                     justification=c_res.score_result.justification,
-                                    is_audited=False
+                                    is_overridden=False
                                 )
                                 db.add(g)
                             db.commit()
@@ -902,7 +902,7 @@ elif nav_choice == "⚡ Live Interactive Grading Console":
                             confidence_score=c_res.confidence_score,
                             routing_decision=c_res.routing,
                             justification=c_res.score_result.justification,
-                            is_audited=False
+                            is_overridden=False
                         )
                         db.add(g)
                     db.commit()

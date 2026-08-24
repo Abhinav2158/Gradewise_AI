@@ -287,4 +287,18 @@ class LLMClient:
                 "evidence_used": [ev_str[:120]]
             }
 
+        if schema_name == "RubricRefinementResult":
+            return {
+                "proposed_change": "add_criterion",
+                "details": {
+                    "id": "crit_novel_1",
+                    "description": "Additional Valid Concept (Instructor Flagged)",
+                    "points": 1.0,
+                    "satisfaction_condition": "Student identifies the newly flagged valid mechanism.",
+                    "keywords_or_concepts": ["concept", "mechanism"]
+                },
+                "rationale": "Incorporating valid scientific observation flagged by instructor into active rubric.",
+                "estimated_affected_answers": 1
+            }
+
         return {}
