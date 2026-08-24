@@ -549,7 +549,7 @@ if nav_choice == "📄 Full Exam & Batch PDF Grading":
                             
                             sub = StudentSubmission(
                                 question_id=q.id,
-                                student_id=file_obj.name,
+                                student_id=100 + s_idx,
                                 answer_text=ans_chunk,
                                 human_score_1=rep.total_score,
                                 human_score_2=rep.total_score
@@ -569,7 +569,7 @@ if nav_choice == "📄 Full Exam & Batch PDF Grading":
                                     max_points=c_res.criterion.points,
                                     final_score=c_res.score_result.points_awarded,
                                     confidence_score=c_res.confidence_score,
-                                    routing_decision=c_res.routing_decision,
+                                    routing_decision=c_res.routing,
                                     justification=c_res.score_result.justification,
                                     is_audited=False
                                 )
