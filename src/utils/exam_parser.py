@@ -74,15 +74,15 @@ def is_instruction_or_header(text: str) -> bool:
         "diagrams, where relevant", "diagrams where relevant", "labelled clearly",
         "marks for each question are indicated", "answer in the space provided",
         "general instructions", "instructions to candidates", "time allowed",
-        "read the following instructions", "end of question paper", "end of answer sheet",
-        "total marks:", "maximum marks:", "all questions are compulsory"
+        "read the following instructions", "maximum marks:", "all questions are compulsory",
+        "short answer questions (2", "essay question ."
     ]
     
     if any(kw in t_lower for kw in instruction_keywords):
         return True
-    
+        
     if re.match(r'^(?:section\s+[a-z0-9]|part\s+[a-z0-9]|short\s+answer|essay\s+questions?)\s*[\—\-:]?', t_lower):
-        if len(t_lower.split()) < 8:
+        if len(t_lower.split()) < 10:
             return True
 
     return False
