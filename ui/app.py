@@ -1141,13 +1141,16 @@ elif nav_choice == "💬 Hybrid RAG & SQL Analytics":
 
     user_query = st.text_input("Ask a question about grading records or class statistics:", placeholder="e.g. 'What is the average score and auto-accept rate?' or 'Why did Student #104 get 0 marks?'")
 
+    distinct_students = [str(r[0]) for r in db.query(distinct(StudentSubmission.student_id)).all()]
+    sample_st_id = distinct_students[0] if distinct_students else "101"
+
     col_q1, col_q2 = st.columns(2)
     with col_q1:
-        if st.button("Sample: 'What is the average score and auto-accept distribution?'"):
-            user_query = "What is the average score and auto-accept distribution?"
+        if st.button("📊 Sample: 'Show student cohort analytics and score summary'"):
+            user_query = "Show student cohort analytics and score summary"
     with col_q2:
-        if st.button("Sample: 'Why did Student #104 receive a score of 0?'"):
-            user_query = "Why did Student #104 receive a score of 0?"
+        if st.button(f"🔍 Sample: 'Show full grading breakdown for Student #{sample_st_id}'"):
+            user_query = f"Show full grading breakdown for Student #{sample_st_id}"
 
     if user_query:
         with st.spinner("Routing query and generating response..."):
