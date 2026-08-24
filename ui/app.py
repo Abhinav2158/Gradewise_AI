@@ -1023,6 +1023,7 @@ elif nav_choice == "👨‍🏫 Instructor Review Queue (HITL)":
                 with btn_col3:
                     if st.button(f"🚩 Flag Rubric Gap", key=f"gap_{g_rec.id}"):
                         st.session_state['flagged_gap'] = {
+                            "question_id": sub.question_id if sub else "Q_1",
                             "excerpt": sub.answer_text if sub else "",
                             "criterion_id": g_rec.criterion_id
                         }
@@ -1036,11 +1037,36 @@ elif nav_choice == "🔄 Versioned Rubrics & Re-scoring":
     st.markdown("""
     <div class="hero-container">
         <div class="hero-title">🔄 Versioned Rubrics & Retroactive Re-scoring</div>
-        <div class="hero-subtitle">Propose minimal rubric amendments and automatically re-score all historical submissions.</div>
+        <div class="hero-subtitle">Select any exam question to inspect active rubric versions, propose AI amendments for newly identified student points, and automatically re-score all cohort submissions.</div>
     </div>
     """, unsafe_allow_html=True)
 
-    active_rubric_rec = db.query(RubricVersion).filter(RubricVersion.is_active == True).first()
+    # 1. Fetch all distinct active rubrics across all questions
+    all_active_rubrics = db.query(RubricVersion).filter(RubricVersion.is_active == True).all()
+
+    if all_active_rubrics:
+        q_options = [r.question_id for r in all_active_rubrics]
+        
+        # Check if a question was pre-selected from HITL "Flag Rubric Gap"
+        flagged_info = st.session_state.get('flagged_gap', {})
+        flagged_qid = flagged_info.get('question_id', q_options[0])
+        default_idx = q_options.index(flagged_qid) if flagged_qid in q_options else 0
+        
+        col_sel1, col_sel2 = st.columns([2, 1])
+        with col_sel1:
+            selected_qid = st.selectbox(
+                "📌 Select Exam Question to Refine or Re-score:",
+                options=q_options,
+                index=default_idx,
+                format_func=lambda q: f"Exam Question: {q}"
+            )
+        with col_sel2:
+            st.caption(f"Total Available Questions: **{len(q_options)}**")
+
+        active_rubric_rec = db.query(RubricVersion).filter(
+            RubricVersion.question_id == selected_qid,
+            RubricVersion.is_active == True
+        ).first()
     if active_rubric_rec:
         st.markdown(f"#### Active Rubric: `{active_rubric_rec.question_id}` (Version {active_rubric_rec.version})")
         curr_schema = RubricSchema.model_validate_json(active_rubric_rec.schema_json)
