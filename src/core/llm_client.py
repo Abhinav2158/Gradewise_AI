@@ -51,8 +51,8 @@ def extract_clean_domain_words(text: str) -> List[str]:
 
 class LLMClient:
     """
-    Production Unified LLM Client powered natively by Gemini 2.5 Flash.
-    Provides sub-second structured academic rubrics, evidence-grounded scoring,
+    Production Unified LLM Client powered by Google Gemini Flash-Lite (High Quota, 1500 RPD).
+    Provides structured academic rubrics, evidence-grounded scoring,
     and automatic fail-safe fallback heuristics.
     """
     def __init__(self, provider: Optional[str] = None):
@@ -63,12 +63,12 @@ class LLMClient:
         self.call_history: List[Dict[str, Any]] = []
 
     def complete(self, prompt: str, system_prompt: str = "", model: Optional[str] = None, temperature: float = 0.0) -> str:
-        """Completion calling Gemini 2.5 Flash with fallback."""
+        """Completion calling Gemini Flash-Lite with fallback."""
         start_t = time.time()
         
-        # 1. Primary Cloud Provider: Gemini 2.5 Flash
+        # 1. Primary Cloud Provider: Gemini Flash-Lite
         if self.gemini_key:
-            model_name = "gemini-2.5-flash"
+            model_name = "gemini-flash-lite-latest"
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.gemini_key}"
             headers = {"Content-Type": "application/json"}
             
@@ -82,12 +82,12 @@ class LLMClient:
             }
             try:
                 req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
-                with urllib.request.urlopen(req, timeout=25) as resp:
+                with urllib.request.urlopen(req, timeout=20) as resp:
                     data = json.loads(resp.read().decode('utf-8'))
                     content = data["candidates"][0]["content"]["parts"][0]["text"]
                     lat = int((time.time() - start_t) * 1000)
                     self.call_history.append({
-                        "provider": "gemini-2.5-flash",
+                        "provider": "gemini-flash-lite",
                         "model": model_name,
                         "is_live_api": True,
                         "latency_ms": lat,
@@ -112,9 +112,9 @@ class LLMClient:
         return content
 
     def structured_output(self, prompt: str, system_prompt: str, schema: Type[BaseModel], model: Optional[str] = None, temperature: float = 0.0) -> BaseModel:
-        """Returns validated Pydantic model instance directly from Gemini 2.5 Flash structured JSON."""
+        """Returns validated Pydantic model instance directly from Gemini Flash-Lite structured JSON."""
         if self.gemini_key:
-            model_name = "gemini-2.5-flash"
+            model_name = "gemini-flash-lite-latest"
             url = f"https://generativelanguage.googleapis.com/v1beta/models/{model_name}:generateContent?key={self.gemini_key}"
             headers = {"Content-Type": "application/json"}
             
@@ -134,7 +134,7 @@ class LLMClient:
             }
             try:
                 req = urllib.request.Request(url, data=json.dumps(payload).encode('utf-8'), headers=headers)
-                with urllib.request.urlopen(req, timeout=25) as resp:
+                with urllib.request.urlopen(req, timeout=20) as resp:
                     data = json.loads(resp.read().decode('utf-8'))
                     raw_json_str = data["candidates"][0]["content"]["parts"][0]["text"]
                     parsed = json.loads(raw_json_str)
