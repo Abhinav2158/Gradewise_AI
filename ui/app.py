@@ -985,9 +985,7 @@ elif nav_choice == "👨‍🏫 Instructor Review Queue (HITL)":
 
     records = db.query(GradingRecord).all()
     if not records:
-        st.info("📋 **The Review Queue is currently empty.**
-
-As you grade student exam papers in **'📄 Full Exam & Batch PDF Grading'** or evaluate answers in **'⚡ Live Grading Console'**, all graded submissions will automatically appear here for your review and score audit.")
+        st.info("The Review Queue is currently empty. As you grade student exam papers in Batch PDF Grading or evaluate answers in Live Grading Console, all graded submissions will automatically appear here for your review and score audit.")
     else:
         filter_route = st.selectbox("Filter by Action:", ["All Records", "requires_review", "flag_for_spot_check", "auto_accept"])
         query = db.query(GradingRecord)
