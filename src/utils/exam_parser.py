@@ -64,6 +64,29 @@ def detect_student_answer_type(text: str) -> str:
 
     return "subjective"
 
+def is_instruction_or_header(text: str) -> bool:
+    """Checks if a matched text block is just an exam header, instruction, or section divider."""
+    t_lower = text.lower().strip()
+    
+    instruction_keywords = [
+        "synthetic benchmark", "benchmark item set", "not an official examination",
+        "section a contains", "section b contains", "section c contains",
+        "diagrams, where relevant", "diagrams where relevant", "labelled clearly",
+        "marks for each question are indicated", "answer in the space provided",
+        "general instructions", "instructions to candidates", "time allowed",
+        "read the following instructions", "end of question paper", "end of answer sheet",
+        "total marks:", "maximum marks:", "all questions are compulsory"
+    ]
+    
+    if any(kw in t_lower for kw in instruction_keywords):
+        return True
+    
+    if re.match(r'^(?:section\s+[a-z0-9]|part\s+[a-z0-9]|short\s+answer|essay\s+questions?)\s*[\—\-:]?', t_lower):
+        if len(t_lower.split()) < 8:
+            return True
+
+    return False
+
 def extract_questions_from_text(paper_text: str) -> ExamQuestionPaper:
     """
     Parses a multi-question exam paper text, identifying questions,
@@ -79,6 +102,7 @@ def extract_questions_from_text(paper_text: str) -> ExamQuestionPaper:
     total_marks = 0.0
 
     if matches:
+        seen_q_nums = set()
         for idx, match in enumerate(matches, 1):
             q_num_str = match.group(1) or match.group(2) or match.group(3) or match.group(4) or str(idx)
             q_num = int(q_num_str) if q_num_str.isdigit() else idx
@@ -87,16 +111,32 @@ def extract_questions_from_text(paper_text: str) -> ExamQuestionPaper:
             if not raw_q_text:
                 continue
 
-            mark_match = re.search(r'[\[\(](\d+(?:\.\d+)?)\s*(?:marks?|pts?|points?)[\]\)]', raw_q_text, re.IGNORECASE)
+            # Skip header / instructional lines that aren't real questions
+            if is_instruction_or_header(raw_q_text):
+                continue
+
+            # Extract marks if explicitly specified (e.g. [3 Marks], (4 pts), [Marks: 20])
+            mark_match = re.search(r'[\[\(](?:marks?:?\s*)?(\d+(?:\.\d+)?)\s*(?:marks?|pts?|points?)?[\]\)]', raw_q_text, re.IGNORECASE)
             q_marks = float(mark_match.group(1)) if mark_match else 5.0
 
-            clean_text = re.sub(r'[\[\(]\d+(?:\.\d+)?\s*(?:marks?|pts?|points?)[\]\)]', '', raw_q_text, flags=re.IGNORECASE).strip()
+            # Clean out marks brackets and trailing answer space lines
+            clean_text = re.sub(r'[\[\(](?:marks?:?\s*)?\d+(?:\.\d+)?\s*(?:marks?|pts?|points?)?[\]\)]', '', raw_q_text, flags=re.IGNORECASE).strip()
+            clean_text = re.sub(r'(?:Answer\s*space:?|__{3,}|—\s*End\s*of.*)', '', clean_text, flags=re.IGNORECASE).strip()
+
+            if len(clean_text) < 5:
+                continue
 
             q_type = detect_question_type(clean_text)
+            q_id = f"Q_{q_num}"
+            
+            # If duplicate question number found, index it uniquely
+            if q_id in seen_q_nums:
+                q_id = f"Q_{q_num}_{idx}"
+            seen_q_nums.add(q_id)
 
             questions.append(ExamQuestion(
                 number=q_num,
-                id=f"Q_{q_num}_{idx}",
+                id=q_id,
                 title=f"Question {q_num}",
                 text=clean_text,
                 max_marks=q_marks,
