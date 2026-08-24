@@ -811,24 +811,40 @@ elif nav_choice == "⚡ Live Interactive Grading Console":
             <div class="card-title">1. Select Question & Answer</div>
         """, unsafe_allow_html=True)
         
-        dataset_choice = st.selectbox("Exam Set", ["ASAP Set 1: Science (Mass Conservation)", "ASAP Set 2: Biology (Polar Bear Adaptations)"])
-        set_id = "1" if "Set 1" in dataset_choice else "2"
-        dataset = load_asap_dataset(set_id)
-
-        if dataset:
-            st.info(f"**Prompt:** {dataset['question_text']}")
-            sample_answers = {f"Student #{r['id']} (Human Score: {r['human_score_1']})": r["student_answer"] for r in dataset["sample_records"]}
-            sample_answers["[Custom Freeform Answer]"] = ""
-            
-            selected_student_key = st.selectbox("Choose sample response or custom:", list(sample_answers.keys()))
-            if selected_student_key == "[Custom Freeform Answer]":
-                student_answer = st.text_area("Enter Student's Answer:", height=150, placeholder="Type subjective answer here...")
-                student_id = 999
-            else:
-                student_answer = st.text_area("Student's Answer:", value=sample_answers[selected_student_key], height=150)
-                student_id = int(selected_student_key.split("#")[1].split(" ")[0])
-
+        source_mode = st.radio("Source Mode:", ["✍️ Custom Freeform Question", "📚 Benchmark Datasets"], horizontal=True)
+        
+        if source_mode == "✍️ Custom Freeform Question":
+            custom_q = st.text_area("Question Prompt:", value="Explain why photosynthesis is essential for maintaining atmospheric balance.", height=80)
+            custom_max_marks = st.number_input("Max Marks:", min_value=1.0, max_value=50.0, value=5.0, step=1.0)
+            custom_ref = st.text_area("Model Reference Answer (Optional):", value="Photosynthesis takes in CO2 and releases O2, keeping oxygen and carbon dioxide levels balanced.", height=80)
+            student_answer = st.text_area("Student's Submitted Answer:", height=120, placeholder="Type student answer to test...")
+            student_id = 101
+            dataset = {
+                "question_id": "Custom_Q1",
+                "question_text": custom_q,
+                "total_marks": custom_max_marks,
+                "reference_answer": custom_ref
+            }
             grade_btn = st.button("🚀 Run Multi-Model Grading Pipeline", type="primary", use_container_width=True)
+        else:
+            dataset_choice = st.selectbox("Exam Set", ["ASAP Set 1: Science (Mass Conservation)", "ASAP Set 2: Biology (Cellular Function)"])
+            set_id = "1" if "Set 1" in dataset_choice else "2"
+            dataset = load_asap_dataset(set_id)
+
+            if dataset:
+                st.info(f"**Prompt:** {dataset['question_text']}")
+                sample_answers = {f"Student #{r['id']} (Human Score: {r['human_score_1']})": r["student_answer"] for r in dataset["sample_records"]}
+                sample_answers["[Custom Freeform Answer]"] = ""
+                
+                selected_student_key = st.selectbox("Choose sample response or custom:", list(sample_answers.keys()))
+                if selected_student_key == "[Custom Freeform Answer]":
+                    student_answer = st.text_area("Enter Student's Answer:", height=150, placeholder="Type subjective answer here...")
+                    student_id = 999
+                else:
+                    student_answer = st.text_area("Student's Answer:", value=sample_answers[selected_student_key], height=150)
+                    student_id = int(selected_student_key.split("#")[1].split(" ")[0])
+
+                grade_btn = st.button("🚀 Run Multi-Model Grading Pipeline", type="primary", use_container_width=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
     with col2:
@@ -910,6 +926,17 @@ elif nav_choice == "👨‍🏫 Instructor Review Queue (HITL)":
         <div class="hero-subtitle">Review ambiguous answers flagged by the confidence engine. Humans only review the 10–20% flagged edge cases.</div>
     </div>
     """, unsafe_allow_html=True)
+
+    col_h1, col_h2 = st.columns([3, 1])
+    col_h1.write("")
+    if col_h2.button("🗑️ Wipe All Database Records", key="wipe_db_btn", help="Clear all stored student submissions and grading records"):
+        db.query(GradingRecord).delete()
+        db.query(StudentSubmission).delete()
+        db.query(RubricVersion).delete()
+        db.query(AuditTrail).delete()
+        db.commit()
+        st.success("All grading records wiped clean!")
+        st.rerun()
 
     records = db.query(GradingRecord).all()
     if not records:
@@ -1020,8 +1047,8 @@ elif nav_choice == "🔄 Versioned Rubrics & Re-scoring":
         st.subheader("Add a New Valid Point to Rubric")
         st.caption("If a student wrote a valid point that wasn't in your answer key, paste that sentence below to award marks for it.")
         
-        excerpt_val = st.session_state.get('flagged_gap', {}).get('excerpt', "In the sealed container, mass remained constant at 150g because all gas was trapped.")
-        inst_note = st.text_input("Teacher's Note (What should earn marks?):", value="Give marks if the student mentions Law of Conservation of Mass or CO2 gas.")
+        excerpt_val = st.session_state.get('flagged_gap', {}).get('excerpt', "")
+        inst_note = st.text_input("Teacher's Note (What should earn marks?):", placeholder="e.g. Award credit if student mentions specific key concept...")
         student_excerpt = st.text_area("Student's Sentence / Quote (Copy-Pasted from Answer):", value=excerpt_val)
 
         if st.button("✨ Propose New Point with AI (Stage 6)"):
