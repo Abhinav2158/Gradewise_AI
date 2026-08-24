@@ -24,13 +24,14 @@ class EvidenceGroundedScorer:
         self.model = config.SCORING_MODEL
 
     def score_criterion(self, criterion: RubricCriterion, ensemble_output: EnsembleSegmentationOutput, temperature: float = 0.0) -> ScoreResult:
-        # Strict Rule 1: Zero evidence = 0 marks guaranteed
-        if not ensemble_output.combined_evidence_spans:
+        # Strict Rule 1: Zero evidence or trivial answer = 0 marks guaranteed
+        trivial_answers = {"nothing", "none", "n/a", "no", "nil", "blank", "idk", ""}
+        if not ensemble_output.combined_evidence_spans or any(s.text.strip().lower() in trivial_answers for s in ensemble_output.combined_evidence_spans):
             return ScoreResult(
                 criterion_id=criterion.id,
                 points_awarded=0.0,
                 max_points=criterion.points,
-                justification="No matching textual evidence found in the student's submission addressing this requirement.",
+                justification="Zero credit: No relevant textual evidence found in student's submission addressing this requirement.",
                 evidence_used=[]
             )
 
