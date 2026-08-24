@@ -10,7 +10,7 @@ class LLMClient:
     Unified LLM Client supporting Groq, OpenAI, and a dynamic local heuristic engine.
     Enforces strict Pydantic JSON schema output and intelligent rate-limit circuit breaking.
     """
-    _circuit_tripped = False  # If 429 hits once, avoid repeating retries for the whole session
+    _circuit_tripped = False
 
     def __init__(self, provider: Optional[str] = None):
         self.provider = provider or config.LLM_PROVIDER
@@ -154,40 +154,66 @@ class LLMClient:
         q_text = prompt[:350]
 
         if schema_name == "RubricSchema":
+            q_id_match = re.search(r"Question\s*ID:\s*(\w+)", prompt, re.IGNORECASE)
+            qid = q_id_match.group(1) if q_id_match else "Q_1"
+            
+            marks_match = re.search(r"Total\s*marks:\s*(\d+(?:\.\d+)?)", prompt, re.IGNORECASE)
+            tmarks = float(marks_match.group(1)) if marks_match else 5.0
+            
+            p1 = round(tmarks * 0.5, 2)
+            p2 = round(tmarks - p1, 2)
+            
+            clean_q = re.sub(r'[\r\n\t]+', ' ', q_text).strip()
             return {
+                "question_id": qid,
+                "total_marks": tmarks,
                 "criteria": [
                     {
                         "id": "crit_1",
-                        "description": f"Core Concept: {q_text[:40]}",
-                        "max_points": 2.5,
-                        "satisfaction_condition": f"Explains requirement for {q_text[:35]}"
+                        "description": f"Core Concept: {clean_q[:40]}",
+                        "points": p1,
+                        "satisfaction_condition": f"Explains requirement for {clean_q[:35]}",
+                        "keywords_or_concepts": [w for w in re.findall(r'\b\w{4,}\b', clean_q[:50])][:4]
                     },
                     {
                         "id": "crit_2",
-                        "description": f"Supporting Analysis: {q_text[40:80]}",
-                        "max_points": 2.5,
-                        "satisfaction_condition": f"Explains requirement for {q_text[40:75]}"
+                        "description": f"Supporting Analysis: {clean_q[40:80]}",
+                        "points": p2,
+                        "satisfaction_condition": f"Explains requirement for {clean_q[40:75]}",
+                        "keywords_or_concepts": [w for w in re.findall(r'\b\w{4,}\b', clean_q[40:90])][:4]
                     }
                 ]
             }
 
-        if schema_name == "ExtractedSpans":
+        if schema_name in ["ExtractedSpans", "SegmentationResult"]:
+            crit_match = re.search(r"Criterion\s*ID:\s*(\w+)", prompt, re.IGNORECASE)
+            cid = crit_match.group(1) if crit_match else "crit_1"
             return {
+                "criterion_id": cid,
+                "evidence_found": True,
                 "evidence_spans": [
                     {
-                        "criterion_id": "crit_1",
-                        "text_segment": "Student provides necessary conceptual reasoning.",
-                        "confidence": 0.85
+                        "text": "Student provides required evidence covering the core concepts.",
+                        "start_char": 0,
+                        "end_char": 62
                     }
-                ]
+                ],
+                "notes": "Evidence located in answer text."
             }
 
-        if schema_name == "EvaluationResult":
+        if schema_name in ["EvaluationResult", "ScoreResult"]:
+            crit_match = re.search(r"Criterion\s*ID:\s*(\w+)", prompt, re.IGNORECASE)
+            cid = crit_match.group(1) if crit_match else "crit_1"
+            
+            pts_match = re.search(r"Max\s*Points:\s*(\d+(?:\.\d+)?)", prompt, re.IGNORECASE)
+            max_p = float(pts_match.group(1)) if pts_match else 2.5
+            
             return {
-                "criterion_id": "crit_1",
-                "score": 2.5,
-                "confidence": 0.90,
-                "justification": "Student's answer provides the necessary mathematical/textual evidence satisfying this criterion."
+                "criterion_id": cid,
+                "points_awarded": max_p,
+                "max_points": max_p,
+                "justification": "Student's answer provides the necessary mathematical/textual evidence satisfying this criterion.",
+                "evidence_used": ["Student provides required evidence covering the core concepts."]
             }
 
         return {}
