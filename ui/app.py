@@ -993,41 +993,42 @@ elif nav_choice == "👨‍🏫 Instructor Review Queue (HITL)":
             query = query.filter(GradingRecord.routing_decision == filter_route)
         
         filtered_records = query.all()
-        st.write(f"Showing **{len(filtered_records)}** grading records.")
+        # Group records by Student Submission (Student ID + Question)
+        sub_ids = list(dict.fromkeys(r.submission_id for r in filtered_records))
+        st.write(f"Showing **{len(sub_ids)}** Student Questions (**{len(filtered_records)}** total rubric checkpoints).")
 
-        for g_rec in filtered_records:
-            sub = db.query(StudentSubmission).filter(StudentSubmission.id == g_rec.submission_id).first()
+        for s_id in sub_ids:
+            sub = db.query(StudentSubmission).filter(StudentSubmission.id == s_id).first()
+            sub_recs = [r for r in filtered_records if r.submission_id == s_id]
+            q_total_score = sum(r.final_score for r in sub_recs)
+            q_max_score = sum(r.max_points for r in sub_recs)
+
             with st.container():
-                st.markdown(f"### Record #{g_rec.id} | Student ID: `{sub.student_id if sub else 'N/A'}` | Criterion: `{g_rec.criterion_id}`")
-                c1, c2, c3 = st.columns([2, 1, 1])
-                c1.write(f"**Answer:** {sub.answer_text if sub else 'N/A'}")
-                c2.write(f"**AI Score:** `{g_rec.tentative_score} / {g_rec.max_points}`")
-                c3.write(f"**Confidence:** `{g_rec.confidence_score:.2f}` (`{g_rec.routing_decision}`)")
-
-                st.write(f"**AI Justification:** *{g_rec.justification}*")
+                st.markdown(f"### 🎓 Student ID: `{sub.student_id if sub else 'N/A'}` | Question: `{sub.question_id if sub else 'N/A'}` | Score: `{q_total_score:.1f} / {q_max_score:.1f} pts`")
+                st.markdown(f"**Submitted Answer:** {sub.answer_text if sub else 'N/A'}")
                 
-                btn_col1, btn_col2, btn_col3 = st.columns(3)
-                with btn_col1:
-                    if st.button(f"✅ Accept AI Score", key=f"acc_{g_rec.id}"):
-                        g_rec.final_score = g_rec.tentative_score
-                        g_rec.is_overridden = False
-                        db.commit()
-                        st.success("Confirmed.")
-                with btn_col2:
-                    new_score = st.number_input(f"Override Score", min_value=0.0, max_value=float(g_rec.max_points), value=float(g_rec.final_score), step=0.5, key=f"num_{g_rec.id}")
-                    if st.button(f"✏️ Apply Override", key=f"ovr_{g_rec.id}"):
-                        g_rec.final_score = new_score
-                        g_rec.is_overridden = True
-                        db.commit()
-                        st.success(f"Overridden to {new_score} pts.")
-                with btn_col3:
-                    if st.button(f"🚩 Flag Rubric Gap", key=f"gap_{g_rec.id}"):
-                        st.session_state['flagged_gap'] = {
-                            "question_id": sub.question_id if sub else "Q_1",
-                            "excerpt": sub.answer_text if sub else "",
-                            "criterion_id": g_rec.criterion_id
-                        }
-                        st.warning("Flagged! Go to 'Versioned Rubrics' tab to refine.")
+                # Checkpoints under this question
+                for g_rec in sub_recs:
+                    with st.expander(f"📌 Checkpoint: {g_rec.criterion_id} — Score: {g_rec.final_score}/{g_rec.max_points} pts ({g_rec.routing_decision})", expanded=True):
+                        c1, c2 = st.columns([3, 1])
+                        with c1:
+                            st.write(f"**AI Justification:** *{g_rec.justification}*")
+                            st.caption(f"Confidence: `{g_rec.confidence_score:.2f}` | Tentative: `{g_rec.tentative_score} pts`")
+                        with c2:
+                            new_score = st.number_input(f"Score ({g_rec.criterion_id})", min_value=0.0, max_value=float(g_rec.max_points), value=float(g_rec.final_score), step=0.5, key=f"num_{g_rec.id}")
+                            btn_c1, btn_c2 = st.columns(2)
+                            with btn_c1:
+                                if st.button("✅ Accept", key=f"acc_{g_rec.id}"):
+                                    g_rec.final_score = g_rec.tentative_score
+                                    g_rec.is_overridden = False
+                                    db.commit()
+                                    st.success("Accepted.")
+                            with btn_c2:
+                                if st.button("✏️ Save", key=f"ovr_{g_rec.id}"):
+                                    g_rec.final_score = new_score
+                                    g_rec.is_overridden = True
+                                    db.commit()
+                                    st.success("Saved.")
                 st.markdown("---")
 
 # -------------------------------------------------------------
