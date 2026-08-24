@@ -528,9 +528,59 @@ if nav_choice == "📄 Full Exam & Batch PDF Grading":
                     avg_conf = float(sum(conf_list) / max(1, len(conf_list)))
                     overall_route = "auto_accept" if avg_conf >= 0.80 else ("flag_for_spot_check" if avg_conf >= 0.50 else "requires_review")
 
+                    # Automatically persist to Database so records appear in HITL Review Queue
+                    try:
+                        for q in parsed_exam.questions:
+                            r_obj = exam_rubrics[q.id]
+                            r_ver = db.query(RubricVersion).filter(RubricVersion.question_id == q.id).first()
+                            if not r_ver:
+                                r_ver = RubricVersion(
+                                    question_id=q.id,
+                                    version=1,
+                                    schema_json=r_obj.model_dump_json(),
+                                    is_active=True
+                                )
+                                db.add(r_ver)
+                                db.commit()
+                                db.refresh(r_ver)
+
+                            ans_chunk = mapped_answers.get(q.id, parsed_doc.text)
+                            rep = q_reports[q.id]
+                            
+                            sub = StudentSubmission(
+                                question_id=q.id,
+                                student_id=file_obj.name,
+                                answer_text=ans_chunk,
+                                human_score_1=rep.total_score,
+                                human_score_2=rep.total_score
+                            )
+                            db.add(sub)
+                            db.commit()
+                            db.refresh(sub)
+
+                            for c_res in rep.criterion_results:
+                                spans_json = json.dumps([s.model_dump() for s in c_res.segmentation.combined_evidence_spans])
+                                g = GradingRecord(
+                                    submission_id=sub.id,
+                                    rubric_version_id=r_ver.id,
+                                    criterion_id=c_res.criterion.id,
+                                    evidence_spans_json=spans_json,
+                                    tentative_score=c_res.score_result.points_awarded,
+                                    max_points=c_res.criterion.points,
+                                    final_score=c_res.score_result.points_awarded,
+                                    confidence_score=c_res.confidence_score,
+                                    routing_decision=c_res.routing_decision,
+                                    justification=c_res.score_result.justification,
+                                    is_audited=False
+                                )
+                                db.add(g)
+                            db.commit()
+                    except Exception as db_err:
+                        print(f"DB persist notice: {db_err}")
+
                     exam_batch_results.append({
                         "Filename": file_obj.name,
-                        "Type": "✍️ Handwritten/Image" if parsed_doc.is_handwritten_or_scanned else "📄 Digital PDF",
+                        "Type": "✏️ Handwritten/Image" if parsed_doc.is_handwritten_or_scanned else "📄 Digital PDF",
                         "OCR Legibility": f"{parsed_doc.ocr_confidence*100:.0f}%",
                         "Total Marks": f"{student_exam_total:.1f} / {student_exam_max:.1f}",
                         "Percentage": f"{(student_exam_total / max(1.0, student_exam_max)) * 100:.1f}%",
