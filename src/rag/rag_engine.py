@@ -28,13 +28,11 @@ class HybridRAGEngine:
         st_match = re.search(r"student\s*#?\s*(\w+)", user_query, re.IGNORECASE)
         if st_match:
             target_st = st_match.group(1)
-            # Check if this student exists in DB
-            subs = self.db.query(StudentSubmission).filter(
-                StudentSubmission.student_id.cast(str) == str(target_st)
-            ).all()
+            all_subs = self.db.query(StudentSubmission).all()
+            subs = [s for s in all_subs if str(s.student_id).lower() == str(target_st).lower()]
 
             if not subs:
-                available_ids = [str(r[0]) for r in self.db.query(distinct(StudentSubmission.student_id)).all()]
+                available_ids = list(dict.fromkeys(str(s.student_id) for s in all_subs))
                 if available_ids:
                     avail_str = ", ".join([f"**Student #{sid}**" for sid in available_ids])
                     return {
