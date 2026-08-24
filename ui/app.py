@@ -985,48 +985,9 @@ elif nav_choice == "👨‍🏫 Instructor Review Queue (HITL)":
 
     records = db.query(GradingRecord).all()
     if not records:
-        st.info("No records in database yet. Populate sample data below to test:")
-        if st.button("Populate Sample Database from ASAP-SAS Set 1"):
-            dataset = load_asap_dataset("1")
-            rubric = rubric_engine.generate_rubric(dataset["question_id"], dataset["question_text"], dataset["reference_answer"], dataset["total_marks"])
-            r_ver = RubricVersion(question_id=dataset["question_id"], version=1, schema_json=rubric.model_dump_json(), is_active=True)
-            db.add(r_ver)
-            db.commit()
-            db.refresh(r_ver)
+        st.info("📋 **The Review Queue is currently empty.**
 
-            for rec in dataset["sample_records"]:
-                report = confidence_engine.grade_full_answer(rec["id"], rubric, rec["student_answer"])
-                sub = StudentSubmission(
-                    question_id=dataset["question_id"],
-                    student_id=rec["id"],
-                    answer_text=rec["student_answer"],
-                    human_score_1=float(rec["human_score_1"]),
-                    human_score_2=float(rec["human_score_2"])
-                )
-                db.add(sub)
-                db.commit()
-                db.refresh(sub)
-
-                for c_res in report.criterion_results:
-                    spans_json = json.dumps([s.model_dump() for s in c_res.segmentation.combined_evidence_spans])
-                    g = GradingRecord(
-                        submission_id=sub.id,
-                        rubric_version_id=r_ver.id,
-                        criterion_id=c_res.criterion.id,
-                        evidence_spans_json=spans_json,
-                        tentative_score=c_res.score_result.points_awarded,
-                        max_points=c_res.criterion.points,
-                        justification=c_res.score_result.justification,
-                        confidence_score=c_res.confidence_score,
-                        routing_decision=c_res.routing,
-                        final_score=c_res.score_result.points_awarded
-                    )
-                    db.add(g)
-                    doc_text = f"Student #{rec['id']}\nCriterion: {c_res.criterion.description}\nEvidence: {spans_json}\nScore: {c_res.score_result.points_awarded}\nJustification: {c_res.score_result.justification}"
-                    vector_store.index_record(f"sub_{sub.id}_{c_res.criterion.id}", doc_text, {"student_id": rec["id"], "score": c_res.score_result.points_awarded})
-            db.commit()
-            st.success("Sample database populated!")
-            st.rerun()
+As you grade student exam papers in **'📄 Full Exam & Batch PDF Grading'** or evaluate answers in **'⚡ Live Grading Console'**, all graded submissions will automatically appear here for your review and score audit.")
     else:
         filter_route = st.selectbox("Filter by Action:", ["All Records", "requires_review", "flag_for_spot_check", "auto_accept"])
         query = db.query(GradingRecord)
