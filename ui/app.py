@@ -376,13 +376,30 @@ if nav_choice == "📄 Full Exam & Batch PDF Grading":
 
         parsed_exam = extract_questions_from_text(raw_paper_text) if raw_paper_text.strip() else ExamQuestionPaper()
         
+        if "excluded_questions" not in st.session_state:
+            st.session_state["excluded_questions"] = set()
+
+        # Filter out questions that the user manually deleted/excluded
+        active_questions = [q for q in parsed_exam.questions if q.id not in st.session_state["excluded_questions"]]
+        parsed_exam.questions = active_questions
+        parsed_exam.total_exam_marks = sum(q.max_marks for q in active_questions)
+
         if parsed_exam.questions:
-            st.markdown(f"**📌 Detected `{len(parsed_exam.questions)}` Question(s) — Total Exam Marks: `{parsed_exam.total_exam_marks}` pts**")
+            col_m1, col_m2 = st.columns([3, 1])
+            col_m1.markdown(f"**📌 Detected `{len(parsed_exam.questions)}` Question(s) — Total Exam Marks: `{parsed_exam.total_exam_marks}` pts**")
+            if st.session_state["excluded_questions"]:
+                if col_m2.button("🔄 Restore Removed", key="restore_del_qs_btn"):
+                    st.session_state["excluded_questions"] = set()
+                    st.rerun()
+
             with st.expander("📝 Review & Adjust Marks Allocation per Question", expanded=True):
                 for idx, q in enumerate(parsed_exam.questions):
-                    c_q1, c_q2 = st.columns([3, 1])
-                    c_q1.write(f"**{q.title}:** {q.text[:70]}...")
+                    c_q1, c_q2, c_q3 = st.columns([3, 1, 0.4])
+                    c_q1.write(f"**{q.title}:** {q.text[:65]}...")
                     q.max_marks = c_q2.number_input(f"{q.id} Marks", min_value=1.0, max_value=50.0, value=float(q.max_marks), step=1.0, key=f"m_{q.id}_{idx}")
+                    if c_q3.button("🗑️", key=f"del_{q.id}_{idx}", help="Remove this question or instruction from grading"):
+                        st.session_state["excluded_questions"].add(q.id)
+                        st.rerun()
 
         st.markdown('</div>', unsafe_allow_html=True)
 

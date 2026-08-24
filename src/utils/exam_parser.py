@@ -75,7 +75,10 @@ def is_instruction_or_header(text: str) -> bool:
         "marks for each question are indicated", "answer in the space provided",
         "general instructions", "instructions to candidates", "time allowed",
         "read the following instructions", "maximum marks:", "all questions are compulsory",
-        "short answer questions (2", "essay question ."
+        "short answer questions (2", "essay question .", "answer all questions",
+        "attempt all questions", "answer any", "attempt any", "answer the following questions",
+        "write your answers in", "answer in complete sentences", "do not write in this margin",
+        "candidates must answer", "carry equal marks", "this section contains", "answer all"
     ]
     
     if any(kw in t_lower for kw in instruction_keywords):
@@ -84,6 +87,10 @@ def is_instruction_or_header(text: str) -> bool:
     if re.match(r'^(?:section\s+[a-z0-9]|part\s+[a-z0-9]|short\s+answer|essay\s+questions?)\s*[\—\-:]?', t_lower):
         if len(t_lower.split()) < 10:
             return True
+
+    words = t_lower.split()
+    if len(words) <= 5 and any(w in t_lower for w in ["answer all", "attempt all", "instructions", "compulsory", "time allowed"]):
+        return True
 
     return False
 
