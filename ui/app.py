@@ -315,14 +315,19 @@ st.sidebar.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-db = get_db()
-llm = LLMClient()
-rubric_engine = RubricEngine(llm)
-ensemble = SegmentationEnsemble(LLMSegmentationBackend(llm))
-scorer = EvidenceGroundedScorer(llm)
-confidence_engine = ConfidenceEngine(ensemble, scorer)
-vector_store = GradingVectorStore()
-rag_engine = HybridRAGEngine(db, vector_store, llm)
+@st.cache_resource
+def get_services():
+    db = get_db()
+    llm = LLMClient()
+    rubric_engine = RubricEngine(llm)
+    ensemble = SegmentationEnsemble(LLMSegmentationBackend(llm))
+    scorer = EvidenceGroundedScorer(llm)
+    confidence_engine = ConfidenceEngine(ensemble, scorer)
+    vector_store = GradingVectorStore()
+    rag_engine = HybridRAGEngine(db, vector_store, llm)
+    return db, llm, rubric_engine, ensemble, scorer, confidence_engine, vector_store, rag_engine
+
+db, llm, rubric_engine, ensemble, scorer, confidence_engine, vector_store, rag_engine = get_services()
 
 # -------------------------------------------------------------
 # TAB 1: FULL EXAM & BATCH PDF GRADING
