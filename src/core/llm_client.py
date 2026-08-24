@@ -75,7 +75,7 @@ class LLMClient:
             except Exception as e:
                 err_str = str(e)
                 if "429" in err_str or "rate_limit" in err_str.lower():
-                    print("⚡ Groq API Rate Limit reached (429). Tripping circuit breaker for instant local grading.", flush=True)
+                    print("[!] Groq API Rate Limit reached (429). Tripping circuit breaker for instant local grading.", flush=True)
                     LLMClient._circuit_tripped = True
                 else:
                     print(f"Groq API notice ({e}). Using local engine.", flush=True)
