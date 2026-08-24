@@ -1141,7 +1141,7 @@ elif nav_choice == "💬 Hybrid RAG & SQL Analytics":
 
     user_query = st.text_input("Ask a question about grading records or class statistics:", placeholder="e.g. 'What is the average score and auto-accept rate?' or 'Why did Student #104 get 0 marks?'")
 
-    distinct_students = [str(r[0]) for r in db.query(distinct(StudentSubmission.student_id)).all()]
+    distinct_students = [str(r[0]) for r in db.query(StudentSubmission.student_id).distinct().all()]
     sample_st_id = distinct_students[0] if distinct_students else "101"
 
     col_q1, col_q2 = st.columns(2)
